@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 import pandas as pd
 import numpy as np
@@ -65,3 +65,36 @@ class BaseModule:
             "roi": round(roi, 2),
             "irr": round(irr, 2)
         }
+
+@dataclass
+class MicrogridVisualizationResult:
+    """微电网可视化结果扩展"""
+    # 继承基础结果
+    module_name: str
+    annual_revenue: float
+    total_investment: float
+    annual_maintenance_cost: float
+    payback_period_years: float
+    roi: float
+    irr: float
+    carbon_reduction_tons: float
+
+    # 时间序列快照（每小时）
+    hourly_snapshots: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Sankey图数据
+    sankey_nodes: List[str] = field(default_factory=list)
+    sankey_links: List[Dict[str, Any]] = field(default_factory=list)
+
+    # 动画帧数据
+    animation_frames: List[Dict[str, Any]] = field(default_factory=list)
+
+    # 场景对比数据
+    scenario_comparison: Optional[Dict[str, Any]] = None
+
+    # 详细计算过程
+    calculation_details: Optional[Dict[str, Any]] = None
+
+    # 时序数据（用于图表）
+    hourly_savings: Optional[np.ndarray] = None
+    daily_savings: Optional[np.ndarray] = None

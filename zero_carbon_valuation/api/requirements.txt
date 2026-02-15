@@ -1,0 +1,17 @@
+# FastAPI后端依赖
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# 数据处理
+numpy==1.24.3
+pandas==2.0.3
+
+# Excel导出
+openpyxl==3.1.2
+
+# 打包依赖
+pyinstaller>=6.0.0
+
+# 现有模块依赖
+# 注意: 确保父目录的modules可以正常导入

@@ -25,6 +25,19 @@ class PricingMode(Enum):
     DYNAMIC = "动态电价"
     FIXED = "固定电价"
 
+class MicrogridScenario(Enum):
+    """微电网场景类型"""
+    PEAK_VALLEY = "峰谷电价套利"
+    ISLAND_MODE = "电网故障/孤岛运行"
+    EV_CHARGING = "电动汽车有序充电"
+    AI_OPTIMIZATION = "AI优化对比"
+
+class WeatherCondition(Enum):
+    """天气条件"""
+    SUNNY = "晴天"
+    CLOUDY = "阴天"
+    RAINY = "雨天"
+
 # ==================== 设备组件 ====================
 
 @dataclass
@@ -149,15 +162,39 @@ class PricingConfig:
 
 # ==================== 项目 ====================
 
+
+@dataclass
+class Transformer:
+    """变压器/接入点"""
+    name: str
+    capacity_kva: float
+    # 关联的户号 (用于计算基准负荷)
+    account_ids: List[str] = field(default_factory=list)
+    # 关联的资产 (分台变独立配置)
+    pv_capacity_kw: float = 0
+    storage_capacity_kwh: float = 0
+    charging_power_kw: float = 0
+    
+    # 计算结果缓存
+    annual_load_kwh: float = 0
+    annual_pv_generation_kwh: float = 0
+    self_use_ratio: float = 0.8  # 该台变的自用比例
+
 @dataclass
 class Project:
     """零碳项目"""
     name: str
     location: str
     buildings: List[Building] = field(default_factory=list)
+    
+    # 资产配置 (全局或汇总)
     pv_system: Optional[PVSystem] = None
     storage_system: Optional[StorageSystem] = None
     charging_system: Optional[ChargingSystem] = None
+    
+    # 多台变配置 (New)
+    transformers: List[Transformer] = field(default_factory=list)
+    
     pricing_config: Optional[PricingConfig] = None
     emission_factor: float = 0.5703         # 电网排放因子 tCO2/MWh
     
@@ -167,3 +204,37 @@ class Project:
     ai_load_shift_pct: float = 0.03         # 负荷优化率
     ai_implementation_cost: float = 200000
     ai_annual_saas_fee: float = 50000
+
+# ==================== 微电网配置 ====================
+
+@dataclass
+class MicrogridConfig:
+    """微电网配置"""
+    # 组件容量
+    pv_capacity_kw: float = 1000
+    storage_capacity_kwh: float = 500
+    storage_power_kw: float = 200
+    charging_power_kw: float = 70
+    ac_capacity_kw: float = 300
+    lighting_power_kw: float = 50
+    production_load_kw: float = 500
+
+    # 仿真参数
+    simulation_hours: int = 24
+    ai_enabled: bool = True
+    ai_efficiency_gain: float = 0.05
+
+    # 天气影响因子
+    weather_impact_factors: Dict[str, float] = field(default_factory=lambda: {
+        "sunny": 1.0,
+        "cloudy": 0.6,
+        "rainy": 0.3
+    })
+
+    # 关键负荷比例（孤岛模式使用）
+    critical_load_ratio: float = 0.7
+
+    # SOC保护阈值
+    soc_min: float = 0.2
+    soc_max: float = 0.95
+
